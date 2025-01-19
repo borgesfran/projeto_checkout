@@ -1,5 +1,6 @@
 package com.loja.api_vendas.exception.handler;
 
+import com.loja.api_vendas.exception.ServerException;
 import com.loja.api_vendas.exception.SubscribeException;
 import com.loja.api_vendas.exception.NotFoundException;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +21,11 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({NotFoundException.class})
     public ResponseEntity<Object> handlerCadastroException(NotFoundException e, WebRequest request){
+        return handleExceptionInternal(e, e.getMessage(), new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler({ServerException.class})
+    public ResponseEntity<Object> handlerServerException(ServerException e, WebRequest request){
         return handleExceptionInternal(e, e.getMessage(), new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
 
