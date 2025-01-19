@@ -49,7 +49,7 @@ public class ProdutoController {
 
     @Operation(summary = "Cadastrar novo produto")
     @PostMapping
-    public ResponseEntity<Produto> cadastrar(@Valid @RequestBody Produto produto){
+    public ResponseEntity<Produto> cadastrar(@Valid @RequestBody ProdutoEntradaDto produto){
         return ResponseEntity.status(HttpStatus.CREATED).body(service.cadastrar(produto));
     }
 
@@ -57,6 +57,12 @@ public class ProdutoController {
     @PutMapping("/{id}")
     public ResponseEntity<Produto> atualizar(@PathVariable UUID id, @Valid @RequestBody ProdutoDto produto){
         return ResponseEntity.ok(service.atualizar(id,produto));
+    }
+
+    @Operation(summary = "Registrar nova entrada de produto")
+    @PostMapping("/{id}/{quantidade}")
+    public ResponseEntity<Produto> registrarNovaEntradaDeProduto(@PathVariable UUID id, @PathVariable Integer quantidade){
+        return ResponseEntity.ok(service.registrarNovaEntradaProduto(id,quantidade));
     }
 
     @Operation(summary = "Deletar produto", method = "DELETE")
