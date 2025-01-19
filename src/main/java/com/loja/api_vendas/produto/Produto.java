@@ -41,6 +41,18 @@ public class Produto implements Serializable {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime dataCadastro;
 
+    @Transient
+    private Integer totalEstoque;
+
+    public Produto(ProdutoEntradaDto dto){
+        this.descricao = dto.descricao();
+        this.codigoBarras = dto.codigoBarras();
+        this.valor = dto.valor();
+        this.ultimaAtualizacao = LocalDateTime.now();
+        this.dataCadastro = LocalDateTime.now();
+        this.totalEstoque = dto.quantidade();
+    }
+
     public Produto toUpperCase(){
         this.descricao = this.descricao.toUpperCase();
         this.ultimaAtualizacao = LocalDateTime.now();

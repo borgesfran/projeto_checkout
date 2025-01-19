@@ -4,9 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.math.BigDecimal;
 
-public record ProdutoDto(
+public record ProdutoEntradaDto(
         @NotBlank(message = "A descrição do produto deve ser informada")
         String descricao,
-        BigDecimal valor
+        Long codigoBarras,
+        BigDecimal valor,
+        Integer quantidade
 ) {
 }
