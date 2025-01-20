@@ -5,6 +5,7 @@ import com.loja.api_vendas.estoque.TipoMovimentacao;
 import com.loja.api_vendas.exception.NotFoundException;
 import com.loja.api_vendas.exception.ServerException;
 import com.loja.api_vendas.exception.SubscribeException;
+import com.loja.api_vendas.utils.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,7 @@ public class ProdutoService {
     }
 
     public List<Produto> buscarPorDescricao(String descricao){
-        List<Produto> produtos = repository.findByDescricaoLike("%"+ descricao + "%");
+        List<Produto> produtos = repository.findByDescricaoLike("%"+ Utils.removerAcentos(descricao.toUpperCase()) + "%");
 
         for (Produto produto : produtos) {
             produto.setTotalEstoque(estoqueService.totalEstoquePorProduto(produto.getId()));
@@ -56,6 +57,16 @@ public class ProdutoService {
         produto.ifPresent(prd->prd.setTotalEstoque(estoqueService.totalEstoquePorProduto(prd.getId())));
 
         return produto;
+    }
+
+    public List<Produto> buscarProdutos(List<UUID> ids_produtos){
+        List<Produto> produtos = repository.findAllById(ids_produtos);
+
+        for (Produto produto : produtos) {
+            produto.setTotalEstoque(estoqueService.totalEstoquePorProduto(produto.getId()));
+        }
+
+        return produtos;
     }
 
     private Produto salvar(Produto produto){
@@ -101,15 +112,33 @@ public class ProdutoService {
         return this.buscarPorId(id).get();
     }
 
-    public void deletar(UUID id){
-       //todo validar depois se nâo tem compra para esse produto
+    public Produto registrarSaidaProduto(UUID id, Integer quantidade){
         var produto = repository.findById(id);
 
-        produto.ifPresentOrElse(prd->{
-            if(estoqueService.totalEstoquePorProduto(prd.getId()) > 0)
-                throw new SubscribeException("Produto não pode ser deletado pois há estoque registrado para o mesmo");
-            repository.delete(prd);
-        }, ()->{throw new NotFoundException("Produto com o id "+ id + " nâo encontrado no banco de dados");});
+        if(produto.isEmpty())
+            throw new NotFoundException("Produto com o id "+ id + " nâo encontrado no banco de dados");
+
+        estoqueService.registrarMovimentacao(produto.get(), TipoMovimentacao.SAIDA, quantidade);
+
+        return this.buscarPorId(id).get();
+    }
+
+    public void deletar(UUID id){
+        var produto = repository.findById(id);
+
+        try{
+            produto.ifPresentOrElse(prd->{
+                if(estoqueService.totalEstoquePorProduto(prd.getId()) > 0)
+                    throw new SubscribeException("Produto não pode ser deletado pois há estoque registrado para o mesmo");
+
+                repository.delete(prd);
+            }, ()->{throw new NotFoundException("Produto com o id "+ id + " nâo encontrado no banco de dados");});
+        }catch (Exception e){
+            log.error("Erro ao deletar o produto: {}", e.getMessage());
+            throw new ServerException("Erro ao deletar produto");
+        }
+
+
     }
 
 }
