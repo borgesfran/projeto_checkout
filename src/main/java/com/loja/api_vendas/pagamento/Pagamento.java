@@ -50,8 +50,7 @@ public class Pagamento implements Serializable {
     Pagamento(Pedido pedido, SolicitacaoEntrega entrega, TipoPagamento tipoPagamento){
         this.pedido = pedido;
         this.solicitacaoEntrega = entrega;
-        this.valorTotal = BigDecimal.ZERO;
-        this.valorTotal.add(pedido.getValorTotal()).add(entrega.getValorEntrega());
+        this.valorTotal = BigDecimal.ZERO.add(pedido.getValorTotal()).add(entrega.getValorEntrega());
         this.tipoPagamento = tipoPagamento;
     }
 }
