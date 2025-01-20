@@ -10,9 +10,10 @@ public record EntregaSalvaDto(
         UUID id_pedido,
         Transportadora transportadora,
         String endereco,
-        BigDecimal valorTotal
+        BigDecimal valorTotal,
+        boolean cancelada
 ) {
     public EntregaSalvaDto(SolicitacaoEntrega entrega){
-        this(entrega.getId(),entrega.getPedido().getId(),entrega.getTransportadora(),entrega.getEndereco(),entrega.getValorEntrega());
+        this(entrega.getId(),entrega.getPedido().getId(),entrega.getTransportadora(),entrega.getEndereco(),entrega.getValorEntrega(),entrega.isCancelada());
     }
 }

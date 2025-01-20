@@ -30,24 +30,48 @@ public class SolicitacaoEntregaService {
     private PedidoService pedidoService;
 
     public List<EntregaSalvaDto> buscarPorTransportadora(UUID id_transportadora){
-        return repository.findByTransportadora(id_transportadora).stream().map(EntregaSalvaDto::new).toList();
+        return repository.findByTransportadora(id_transportadora,false).stream().map(EntregaSalvaDto::new).toList();
+    }
+
+    public List<EntregaSalvaDto> buscarCanceladasPorTransportadora(UUID id_transportadora){
+        return repository.findByTransportadora(id_transportadora, true).stream().map(EntregaSalvaDto::new).toList();
     }
 
     public EntregaSalvaDto buscarPorPedido(UUID id_pedido){
-        return new EntregaSalvaDto(repository.findByPedido(id_pedido).get());
+        return new EntregaSalvaDto(repository.findByPedido(id_pedido,false).get());
+    }
+
+    public EntregaSalvaDto buscarCanceladasPorPedido(UUID id_pedido){
+        return new EntregaSalvaDto(repository.findByPedido(id_pedido,true).get());
     }
 
     public Optional<SolicitacaoEntrega> buscarSolicitacaoEntregaPorPedido(UUID id_pedido){
-        return repository.findByPedido(id_pedido);
+        return repository.findByPedido(id_pedido,false);
+    }
+
+    public Optional<SolicitacaoEntrega> buscarSolicitacaoEntregaCanceladasPorPedido(UUID id_pedido){
+        return repository.findByPedido(id_pedido,true);
     }
 
     public EntregaSalvaDto buscarPorId(UUID id){
-        return new EntregaSalvaDto(repository.findById(id).get());
+        var entrega = repository.findById(id);
+
+        if(entrega.isEmpty())
+            throw new NotFoundException("Esta entrega não está cadastrada no banco de dados");
+
+        return new EntregaSalvaDto(entrega.get());
     }
 
     private SolicitacaoEntrega salvar(SolicitacaoEntrega solicitacaoEntrega){
         try {
-            return repository.save(solicitacaoEntrega);
+            var entrega = repository.findByPedido(solicitacaoEntrega.getPedido().getId(),true);
+
+            if(entrega.isPresent()){
+                entrega.get().setCancelada(false);
+                solicitacaoEntrega = entrega.get();
+            }
+
+            return repository.saveAndFlush(solicitacaoEntrega);
         }catch (Exception e){
             log.error("Erro ao processar dados de produto: {}",e.getMessage());
             throw new ServerException("Erro ao processar dados de produto. Tente novamente");
@@ -70,7 +94,7 @@ public class SolicitacaoEntregaService {
 
     public EntregaDto cadastrar (SolicitacaoEntregaDto dto){
 
-        if(!repository.findByPedido(dto.id_pedido()).isEmpty())
+        if(!repository.findByPedido(dto.id_pedido(),false).isEmpty())
             throw new ServerException("Entrega já cadastrada para esse pedido");
 
         var entrega = this.salvar(this.validarSolicitacaoEntrega(dto));
@@ -79,11 +103,13 @@ public class SolicitacaoEntregaService {
     }
 
     public EntregaDto alterar(UUID id, SolicitacaoEntregaDto dto){
-        if(repository.findById(id).isEmpty())
+        var entrega = repository.findById(id);
+        if(entrega.isEmpty())
             throw new NotFoundException("Entrega não está cadastrada na base de dados");
 
         SolicitacaoEntrega solicitacaoEntrega = this.validarSolicitacaoEntrega(dto);
         solicitacaoEntrega.setId(id);
+
         this.salvar(solicitacaoEntrega);
 
         return new EntregaDto(solicitacaoEntrega,dto.endereco());
@@ -95,12 +121,11 @@ public class SolicitacaoEntregaService {
         if(entrega.isEmpty())
             throw new NotFoundException("Entrega não está cadastrada na base de dados");
 
-        var pedido = pedidoService.buscarPorId(entrega.get().getPedido().getId());
-
-        if(pedido.isPresent() && pedido.get().isFaturado())
+        if(entrega.get().getPedido().isFaturado())
             throw new ServerException("Impossível prosseguir, entrega já faturada");
 
-        repository.delete(entrega.get());
+        entrega.get().setCancelada(true);
+        this.salvar(entrega.get());
     }
 }
 

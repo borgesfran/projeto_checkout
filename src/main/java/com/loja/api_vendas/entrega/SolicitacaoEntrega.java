@@ -27,19 +27,21 @@ public class SolicitacaoEntrega {
     private UUID id;
 
     @NotNull
-    @OneToOne
-    @JoinColumn(name = "id_pedido", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "id_pedido", nullable = false, unique = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Pedido pedido;
 
     @NotNull
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "id_transportadora", nullable = false)
     private Transportadora transportadora;
 
     private String endereco;
 
     private BigDecimal valorEntrega;
+
+    private boolean cancelada;
 
     SolicitacaoEntrega(Pedido pedido, Transportadora transportadora, Endereco endereco){
         this.pedido = pedido;
