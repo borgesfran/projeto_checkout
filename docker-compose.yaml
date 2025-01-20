@@ -1,0 +1,21 @@
+services:
+  api:
+    image: projeto_checkout
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    network_mode: bridge
+    links:
+        - db
+  db:
+    image: postgres:latest
+    network_mode: bridge
+    expose:
+        - 5432
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: vendas
