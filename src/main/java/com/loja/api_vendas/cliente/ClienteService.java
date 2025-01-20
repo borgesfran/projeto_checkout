@@ -58,7 +58,6 @@ public class ClienteService {
     }
 
     public void deletar(UUID id){
-        //todo validar depois se n tem compra para essa pessoa
         var cliente = repository.findById(id);
 
         cliente.ifPresentOrElse(usr -> this.salvar(usr.desabilitar()),

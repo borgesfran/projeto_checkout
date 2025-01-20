@@ -4,13 +4,13 @@ import com.loja.api_vendas.cliente.ClienteService;
 import com.loja.api_vendas.exception.NotFoundException;
 import com.loja.api_vendas.exception.ServerException;
 import com.loja.api_vendas.produto.Produto;
-import com.loja.api_vendas.produto.ProdutoPedidoDto;
 import com.loja.api_vendas.produto.ProdutoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -211,6 +211,8 @@ public class PedidoService {
             throw new NotFoundException("Pedido com o id " + id_pedido + " nâo encontrado no banco de dados");
 
         pedido.get().setFaturado(true);
+        pedido.get().setDataFaturamento(LocalDateTime.now());
+
         this.salvarPedido(pedido.get());
     }
 
